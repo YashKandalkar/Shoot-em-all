@@ -1,6 +1,6 @@
 //const fs = require('fs');
 
-var socket, players = {};
+var socket = io(), players = {};
 
 var player_img;
 var player, space_background;
@@ -34,7 +34,6 @@ function preload(){
 function setup() {
   createCanvas(windowWidth, windowHeight);
   player = new Ship(50, 50, 'playerShip1_blue.png', 100);
-  socket = io.connect("localhost:3000");
   space_background = new Back(width*2, height*2, 300, [-width, -height]);
   
   socket.on('playersData', (data) => {
