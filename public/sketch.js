@@ -72,16 +72,17 @@ function setup() {
     .style("background-image", "url(https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX1168602.jpg)");
 
   gameName
-    .position(windowWidth/2-50, 70)
+    .parent(startDiv)
+    .position(windowWidth/2-40, 70)
     .style("font-family", "'Cinzel', serif")
     .style("color", "rgb(255, 194, 102)")
     .style("font-size", "40px")
     .style("text-align", "center")
     .style("border", "3px solid rgb(204, 122, 0)")
-    .parent(startDiv);
 
   startB
-    .position(windowWidth/2-80, str(windowHeight/2-70))
+    .parent(startDiv)
+    .style("margin", "0 auto")
     .style("font-family", "'Cinzel', serif")
     .style("color", "rgb(255, 194, 102)")
     .style("font-size", "40px")
@@ -89,8 +90,7 @@ function setup() {
     .style("background", "#000000")        
     .style("border-color", "rgb(204, 122, 0)")
     .mouseClicked(start)
-    .parent(startDiv)
-        
+   
   helpB
     .position(windowWidth-45, windowHeight-45)
     .style("background", "#ffffff")
