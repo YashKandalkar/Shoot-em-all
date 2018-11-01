@@ -1,16 +1,21 @@
-var express = require('express');
-var app = express();
-
-var server = app.listen(3000);
-var socket = require('socket.io');
-var io = socket(server);
+const express = require('express');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
 app.use(express.static('public'));
 
-io.sockets.on('connection', newConnection);
+var port = process.env.PORT || 3000
 
 var players = {};
 var bullets = [];
+
+app.get('/', function (request, result) {
+    result.sendfile('index.html');
+});
+
+io.on('connection', newConnection);
+
 
 function newConnection(socket){
     console.log("new user connected: " + socket.id);
@@ -34,5 +39,6 @@ function newConnection(socket){
     });
 }
 
-
-console.log("yay server running");
+http.listen(port, function (){
+    console.log('yay server running on: ' + port);
+});
