@@ -1,7 +1,17 @@
-var socket = io(), players = {};
+var socket = io();
+var players = {};
 
 var player_img;
 var player, space_background;
+
+var startDiv, charDiv, gameName;
+var startB, helpB, aboutB;
+var started = false;
+
+function start(){
+    started = true;
+    startDiv.hide()
+}
 
 var paths = {
   'damage': ['assets/playerShip1_damage1.png', 'assets/playerShip1_damage2.png', 'assets/playerShip1_damage3.png', 'assets/playerShip2_damage1.png', 'assets/playerShip2_damage2.png', 'assets/playerShip2_damage3.png', 'assets/playerShip3_damage1.png', 'assets/playerShip3_damage2.png', 'assets/playerShip3_damage3.png'], 
@@ -46,51 +56,95 @@ function setup() {
   socket.on('playerDisconnected', (data)=>{
     delete players[data.id];
   });
+
+  startDiv = createDiv();
+  charDiv = createDiv();
+  
+  gameName = createP("Shoot 'em All");
+    
+  helpB = createDiv('<i class="fas fa-info-circle fa-2x"></i>');
+  startB = createButton("START");
+
+  startDiv
+    .position(0, 0)
+    .style("width", str(windowWidth) + "px")
+    .style("height", str(windowHeight) + "px")
+    .style("background-image", "url(https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX1168602.jpg)");
+
+  gameName
+    .position(windowWidth*17/200, 70)
+    .style("width", "83vw")
+    .style("font-family", "'Cinzel', serif")
+    .style("color", "rgb(255, 194, 102)")
+    .style("font-size", "40px")
+    .style("text-align", "center")
+    .style("border", "3px solid rgb(204, 122, 0)")
+    .parent(startDiv);
+
+  startB
+    .position(windowWidth/2-60, 160)
+    .style("font-family", "'Cinzel', serif")
+    .style("color", "rgb(255, 194, 102)")
+    .style("font-size", "40px")
+    .style("text-align", "center")
+    .style("background", "#000000")        
+    .style("border-color", "rgb(204, 122, 0)")
+    .mouseClicked(start)
+    .parent(startDiv)
+        
+  helpB
+    .position(windowWidth-45, windowHeight-45)
+    .style("background", "#ffffff")
+    .parent(startDiv)
 }
 
 function draw() {
-  background(0);
-  
-  rect(0, 0, 100, 50);
-  text(int(player.pos.x), 10, 15);
-  text(int(player.pos.y), 10, 30);
-  
-  translate(windowWidth/2, windowHeight/2);
-  scale(1);
-  
-  //things below this translate moves relative to the 
-  //player (if not in separate push pop). Things above stay in place on the screen.
-  translate(-player.pos.x, -player.pos.y);
-  space_background.show();
-  
-  player.update();
-  player.show();
-  
-  noFill();
-  stroke(255)
-  rect(-width, -height, 2*width, 2*height);
+  if(started){
+    background(0);
+    
+    rect(0, 0, 100, 50);
+    text(int(player.pos.x), 10, 15);
+    text(int(player.pos.y), 10, 30);
+    
+    translate(windowWidth/2, windowHeight/2);
+    scale(1);
+    
+    //things below this translate moves relative to the 
+    //player (if not in separate push pop). Things above stay in place on the screen.
+    translate(-player.pos.x, -player.pos.y);
+    space_background.show();
+    
+    player.update();
+    player.show();
+    
+    noFill();
+    stroke(255)
+    rect(-width, -height, 2*width, 2*height);
 
-  socket.emit('player', player.toObj());
-  //socket.emit('bullets', {b: bullets})
+    socket.emit('player', player.toObj());
+    //socket.emit('bullets', {b: bullets})
 
-  if(Object.keys(players).length > 0){
-    for(let id of Object.keys(players)){
-      if(id !== player.id){
-        players[id][0].show(players[id][1]);
+    if(Object.keys(players).length > 0){
+      for(let id of Object.keys(players)){
+        if(id !== player.id){
+          players[id][0].show(players[id][1]);
+        }
       }
     }
-  }
 
-  for(let i = bullets.length - 1; i > 0; i--){
-    if(bullets[i].collided()){
-      bullets.splice(i, 1);
-      continue;
+    for(let i = bullets.length - 1; i > 0; i--){
+      if(bullets[i].collided()){
+        bullets.splice(i, 1);
+        continue;
+      }
+      bullets[i].update();
+      bullets[i].show()
     }
-    bullets[i].update();
-    bullets[i].show()
   }
 }
 
 function mouseClicked(){
-  bullets.push(player.shoot(images['lasers']['laserBlue01.png']));
+  if(started){
+    bullets.push(player.shoot(images['lasers']['laserBlue01.png']));
+  }
 }
