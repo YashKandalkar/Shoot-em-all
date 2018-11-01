@@ -55,7 +55,7 @@ function draw() {
   text(int(player.pos.x), 10, 15);
   text(int(player.pos.y), 10, 30);
   
-  translate(width/2, height/2);
+  translate(windowWidth/2, windowHeight/2);
   scale(1);
   
   //things below this translate moves relative to the 

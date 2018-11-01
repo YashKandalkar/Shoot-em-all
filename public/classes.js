@@ -15,7 +15,7 @@ class Ship{
   }
   
   update(){
-    this.vel = createVector(mouseX-width/2, mouseY-height/2);
+    this.vel = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
     var d = dist(mouseX, mouseY, width/2, height/2);
     this.vel.mult(d*0.0005);    
     this.vel.limit(5);
@@ -27,7 +27,7 @@ class Ship{
   }
 
   shoot(img){
-    var v = createVector(mouseX - width/2, mouseY - height/2);
+    var v = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
     v.setMag(this.vel.magSq() > 4 ? this.vel.magSq() : 9);
     return new Bullet(createVector(this.pos.x, this.pos.y), v, img);
   }
