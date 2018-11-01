@@ -73,7 +73,6 @@ function setup() {
 
   gameName
     .position(windowWidth*17/200, 70)
-    .style("width", "83vw")
     .style("font-family", "'Cinzel', serif")
     .style("color", "rgb(255, 194, 102)")
     .style("font-size", "40px")
@@ -82,7 +81,7 @@ function setup() {
     .parent(startDiv);
 
   startB
-    .position(windowWidth/2-60, 160)
+    .position(windowWidth/2-60, str(windowWidth-100))
     .style("font-family", "'Cinzel', serif")
     .style("color", "rgb(255, 194, 102)")
     .style("font-size", "40px")
