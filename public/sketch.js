@@ -73,7 +73,8 @@ function setup() {
 
   gameName
     .parent(startDiv)
-    .position(windowWidth/2-40, 70)
+    .position(windowWidth/2-160, 70)
+    .style("width", "320px")
     .style("font-family", "'Cinzel', serif")
     .style("color", "rgb(255, 194, 102)")
     .style("font-size", "40px")
@@ -82,7 +83,8 @@ function setup() {
 
   startB
     .parent(startDiv)
-    .style("margin", "0 auto")
+    .position(windowWidth/2-70, windowHeight/2-33)
+    .style("width", "140px")
     .style("font-family", "'Cinzel', serif")
     .style("color", "rgb(255, 194, 102)")
     .style("font-size", "40px")
