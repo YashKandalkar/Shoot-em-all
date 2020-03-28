@@ -125,7 +125,7 @@ function draw() {
       setTimeout(()=>{
         location.reload();
       }, 5000);
-      aler("Reloading window in 5s...");
+      alert("Reloading window in 5s...");
       noLoop();
     }
     background(0);
