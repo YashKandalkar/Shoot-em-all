@@ -26,10 +26,15 @@ class Ship{
     this.pos.add(this.vel);
   }
 
-  shoot(img){
+  shoot(imgName){
     var v = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
-    v.setMag(this.vel.magSq() > 4 ? this.vel.magSq() : 9);
-    return new Bullet(createVector(this.pos.x, this.pos.y), v, img);
+    v.setMag(17);
+    // v.setMag(this.vel.magSq() > 4 ? this.vel.magSq() : 9);
+    return new Bullet(createVector(this.pos.x, this.pos.y), v, imgName);
+  }
+
+  takeHit(amount){
+    this.hp -= amount;
   }
 
   toObj(){
@@ -44,30 +49,38 @@ class Ship{
 }
 
 class Bullet{
-  constructor(pos, vel, img){
+  constructor(pos, vel, imgName){
     this.vel = vel;
     this.pos = pos;
-    this.img = img;
+    this.imgName = imgName;
+    this.collided_with_player = false;
   }
 
   show(){
     push();
     translate(this.pos.x, this.pos.y);
     rotate(this.vel.heading() + PI/2);
-    image(this.img, 0, 0, 10, 40);
+    image(images['lasers'][this.imgName], 0, 0, 10, 40);
     pop();
   }
 
   update(){
     this.pos.add(this.vel);
-    for (let i of Object.keys(players)) {
-      //players[i]
-    }
   }
 
   collided(){
     return this.pos.x > width || this.pos.x < -width
-        || this.pos.y > height|| this.pos.y < -height;
+        || this.pos.y > height|| this.pos.y < -height
+        || this.collided_with_player;
+  }
+  toObj(){
+    return {
+              x: this.pos.x,
+              y: this.pos.y,
+              vx: this.vel.x,
+              vy: this.vel.y,
+              imgName: this.imgName
+            }
   }
 }
 

@@ -6,6 +6,7 @@ var player, space_background;
 
 var startDiv, charDiv, gameName;
 var startB, helpB, aboutB;
+
 var started = false;
 
 function start(){
@@ -29,8 +30,10 @@ var images = {
   'powerUps': {}
 }
 
-var bullets = [];
-
+var local_bullets = [];
+var others_bullets = {};
+var local_bullets_objs = [];
+var t = true;
 function preload(){
   for(let folder of Object.keys(paths)){
     for(let path of paths[folder]){
@@ -53,8 +56,24 @@ function setup() {
     }
   });
 
-  socket.on('playerDisconnected', (data)=>{
+  socket.on('playerDisconnected', (data) => {
     delete players[data.id];
+  });
+
+  socket.on('allBullets', (data) => {
+    for(let id of Object.keys(data)){
+      if(id !== socket.id){
+        let t = [];
+        for(let b of data[id]){
+          t.push(new Bullet(createVector(b.x, b.y), createVector(b.vx, b.vy), b.imgName));
+        }
+        others_bullets[id] = t;
+      }
+    }
+  });
+
+  socket.on('hit', ({amount}) => {
+    player.takeHit(10);
   });
 
   startDiv = createDiv();
@@ -101,12 +120,27 @@ function setup() {
 
 function draw() {
   if(started){
+    if(player.hp <= 0){
+      alert("You died. RIP.");
+      setTimeout(()=>{
+        location.reload();
+      }, 5000);
+      aler("Reloading window in 5s...");
+      noLoop();
+    }
     background(0);
     
     rect(0, 0, 100, 50);
     text(int(player.pos.x), 10, 15);
     text(int(player.pos.y), 10, 30);
     
+    //health bar 
+    noFill();
+    rect(windowWidth/2-windowWidth*0.25/2, 10, windowWidth*0.25, 30)
+    noStroke();
+    fill((100-player.hp)/100*255, (player.hp)/100*255, 0);
+    rect(windowWidth/2-windowWidth*0.25/2, 10, windowWidth*0.25*player.hp/100, 30)
+
     translate(windowWidth/2, windowHeight/2);
     scale(1);
     
@@ -122,30 +156,45 @@ function draw() {
     stroke(255)
     rect(-width, -height, 2*width, 2*height);
 
-    socket.emit('player', player.toObj());
-    //socket.emit('bullets', {b: bullets})
-
     if(Object.keys(players).length > 0){
       for(let id of Object.keys(players)){
-        if(id !== player.id){
+        if(id !== socket.id){
           players[id][0].show(players[id][1]);
         }
       }
     }
 
-    for(let i = bullets.length - 1; i > 0; i--){
-      if(bullets[i].collided()){
-        bullets.splice(i, 1);
+    for(let id of Object.keys(others_bullets)){
+      for(let b of others_bullets[id]){
+        b.show();
+      }
+    }
+
+    for(let i = local_bullets.length - 1; i > 0; i--){
+      for (let id of Object.keys(players)) {
+        if(local_bullets[i].pos.dist(players[id][0].pos) <= 35){
+          local_bullets[i].collided_with_player = true;
+        }
+      }
+      if(local_bullets[i].collided()){
+        delete local_bullets[i];
+        local_bullets.splice(i, 1);
         continue;
       }
-      bullets[i].update();
-      bullets[i].show()
+      local_bullets[i].update();
+      local_bullets[i].show();
+      local_bullets_objs.push(local_bullets[i].toObj());
     }
+
+    socket.emit('player', player.toObj());
+    socket.emit('bullets', {bullet_objs: local_bullets_objs});
+    local_bullets_objs = [];
   }
 }
 
 function mouseClicked(){
   if(started){
-    bullets.push(player.shoot(images['lasers']['laserBlue01.png']));
+    let b = player.shoot('laserBlue01.png');
+    local_bullets.push(b);
   }
 }
