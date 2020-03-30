@@ -4,15 +4,11 @@ var players = {};
 var player_img;
 var player, space_background;
 
-var startDiv, charDiv, gameName;
-var startB, helpB, aboutB;
+var startDiv = document.getElementById("start-div");
 
+var local_bullets = [];
+var others_bullets = [];
 var started = false;
-
-function start(){
-    started = true;
-    startDiv.hide()
-}
 
 var paths = {
   'damage': ['assets/playerShip1_damage1.png', 'assets/playerShip1_damage2.png', 'assets/playerShip1_damage3.png', 'assets/playerShip2_damage1.png', 'assets/playerShip2_damage2.png', 'assets/playerShip2_damage3.png', 'assets/playerShip3_damage1.png', 'assets/playerShip3_damage2.png', 'assets/playerShip3_damage3.png'], 
@@ -30,10 +26,11 @@ var images = {
   'powerUps': {}
 }
 
-var local_bullets = [];
-var others_bullets = {};
-var local_bullets_objs = [];
-var t = true;
+function start(){
+    started = true;
+    startDiv.style.display = "none";
+}
+
 function preload(){
   for(let folder of Object.keys(paths)){
     for(let path of paths[folder]){
@@ -60,62 +57,19 @@ function setup() {
     delete players[data.id];
   });
 
-  socket.on('allBullets', (data) => {
-    for(let id of Object.keys(data)){
-      if(id !== socket.id){
-        let t = [];
-        for(let b of data[id]){
-          t.push(new Bullet(createVector(b.x, b.y), createVector(b.vx, b.vy), b.imgName));
-        }
-        others_bullets[id] = t;
-      }
+  socket.on('new-bullet', ({b}) => {
+    if (b.owner_id !== socket.id) {
+      let t = new Bullet(createVector(b.x, b.y), 
+                          createVector(b.vx, b.vy),
+                          b.imgName,
+                          b.owner_id);
+      others_bullets.push(t);
     }
   });
 
-  socket.on('hit', ({amount}) => {
-    player.takeHit(10);
+  socket.on('take-hit', ({amount}) => {
+    player.takeHit(amount);
   });
-
-  startDiv = createDiv();
-  charDiv = createDiv();
-  
-  gameName = createP("Shoot 'em All");
-    
-  helpB = createDiv('<i class="fas fa-info-circle fa-2x"></i>');
-  startB = createButton("START");
-
-  startDiv
-    .position(0, 0)
-    .style("width", str(windowWidth) + "px")
-    .style("height", str(windowHeight) + "px")
-    .style("background-image", "url(https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX1168602.jpg)");
-
-  gameName
-    .parent(startDiv)
-    .position(windowWidth/2-160, 70)
-    .style("width", "320px")
-    .style("font-family", "'Cinzel', serif")
-    .style("color", "rgb(255, 194, 102)")
-    .style("font-size", "40px")
-    .style("text-align", "center")
-    .style("border", "3px solid rgb(204, 122, 0)")
-
-  startB
-    .parent(startDiv)
-    .position(windowWidth/2-70, windowHeight/2-33)
-    .style("width", "140px")
-    .style("font-family", "'Cinzel', serif")
-    .style("color", "rgb(255, 194, 102)")
-    .style("font-size", "40px")
-    .style("text-align", "center")
-    .style("background", "#000000")        
-    .style("border-color", "rgb(204, 122, 0)")
-    .mouseClicked(start)
-   
-  helpB
-    .position(windowWidth-45, windowHeight-45)
-    .style("background", "#ffffff")
-    .parent(startDiv)
 }
 
 function draw() {
@@ -164,16 +118,30 @@ function draw() {
       }
     }
 
-    for(let id of Object.keys(others_bullets)){
-      for(let b of others_bullets[id]){
-        b.show();
+    for(let [i, b] of others_bullets.entries()){
+      for (let id of Object.keys(players)) {
+        if((b.owner !== id) && (b.pos.dist(players[id][0].pos) <= 35)) {
+          b.collided_with_player = true;
+        }
+        if(b.pos.dist(player.pos) <= 35){
+          b.collided_with_player = true;
+        }
       }
+      if(b.collided()){
+        delete b;
+        others_bullets.splice(i, 1);
+        continue;
+      }
+
+      b.update();
+      b.show();
     }
 
     for(let i = local_bullets.length - 1; i > 0; i--){
       for (let id of Object.keys(players)) {
         if(local_bullets[i].pos.dist(players[id][0].pos) <= 35){
           local_bullets[i].collided_with_player = true;
+          socket.emit('hit', {player_id: id});
         }
       }
       if(local_bullets[i].collided()){
@@ -183,18 +151,16 @@ function draw() {
       }
       local_bullets[i].update();
       local_bullets[i].show();
-      local_bullets_objs.push(local_bullets[i].toObj());
     }
 
     socket.emit('player', player.toObj());
-    socket.emit('bullets', {bullet_objs: local_bullets_objs});
-    local_bullets_objs = [];
   }
 }
 
 function mouseClicked(){
   if(started){
-    let b = player.shoot('laserBlue01.png');
+    let b = player.shoot('laserBlue01.png', socket.id);
     local_bullets.push(b);
+    socket.emit('bullet', {bullet_obj: b.toObj()});
   }
 }

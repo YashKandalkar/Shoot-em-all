@@ -26,11 +26,11 @@ class Ship{
     this.pos.add(this.vel);
   }
 
-  shoot(imgName){
+  shoot(imgName, owner){
     var v = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
     v.setMag(17);
     // v.setMag(this.vel.magSq() > 4 ? this.vel.magSq() : 9);
-    return new Bullet(createVector(this.pos.x, this.pos.y), v, imgName);
+    return new Bullet(createVector(this.pos.x, this.pos.y), v, imgName, owner);
   }
 
   takeHit(amount){
@@ -49,11 +49,12 @@ class Ship{
 }
 
 class Bullet{
-  constructor(pos, vel, imgName){
+  constructor(pos, vel, imgName, owner){
     this.vel = vel;
     this.pos = pos;
     this.imgName = imgName;
     this.collided_with_player = false;
+    this.owner = owner;
   }
 
   show(){

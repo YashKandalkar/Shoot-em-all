@@ -5,3 +5,45 @@ html, body {
 canvas {
   display: block;
 }
+
+#start-div{
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 100vw;
+    height: 100vh;
+    background-image: url("https://d2gg9evh47fn9z.cloudfront.net/800px_COLOURBOX1168602.jpg");
+}
+
+#game-name{
+    position: fixed;
+    left: calc(100vw / 2 - 160px);
+    top: 70px;
+    width: 320px;
+    font-family: 'Cinzel', serif;
+    color: rgb(255, 194, 102);
+    font-size: 40px;
+    text-align: center;
+    border: 3px solid rgb(204, 122, 0);
+}
+
+#start-button{
+    position: fixed;
+    left: calc(100vw / 2 - 70px);
+    top: calc(100vh / 2 - 33px);
+    width: 140px;
+    font-family: 'Cinzel', serif;
+    color: rgb(255, 194, 102);
+    font-size: 40px;
+    text-align: center;
+    background: #000000;
+    border-color:rgb(204, 122, 0);
+}
+
+#help-button{
+    position: fixed;
+    left: calc(90vw);
+    top: calc(90vh);
+    background: #ffffff;
+}
+

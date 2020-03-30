@@ -36,34 +36,19 @@ function newConnection(socket){
         io.sockets.emit('playersData', players);
     });
 
-    socket.on('bullets', ({bullet_objs}) => {
-        let t = bullet_objs;
-        for (let [i, b] of t.entries()) {
-            if(b.x > width || b.x < -width || b.y > height|| b.y < -height){
-                delete b;
-                t.splice(i, 1);
-            }
-            for(let id of Object.keys(players)){
-                if(id !== socket.id){
-                    if(Math.hypot(b.x - players[id].x, b.y - players[id].y) < 35){
-                        //send only to that player which got hit by a bullet
-                        io.to(id).emit('hit', {amount:10});
-                        //delete the bullet
-                        delete b;
-                        t.splice(i, 1);
-                    }
-                }
-            }
-        }
-        bullets[socket.id] = t;
-        io.sockets.emit('allBullets', bullets);
+    socket.on('bullet', ({bullet_obj}) => {
+        bullet_obj.owner_id = socket.id;
+        io.sockets.emit('new-bullet', {b: bullet_obj});
     })
+
+    socket.on('hit', ({player_id}) => {
+        io.to(player_id).emit('take-hit', {amount: 10});
+    });
 
     socket.on('disconnect', () => {
         console.log("user disconnected: " + socket.id);
         io.sockets.emit('playerDisconnected', {id: socket.id});
         delete players[socket.id];
-        delete bullets[socket.id];
     });
 }
 
