@@ -107,3 +107,7 @@ class Back{
     }
   }
 }
+
+class Powerup{
+  
+}

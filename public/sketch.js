@@ -1,6 +1,6 @@
 var socket = io();
 var players = {};
-
+var can_shoot = true;
 var player_img;
 var player, space_background;
 
@@ -8,6 +8,7 @@ var startDiv = document.getElementById("start-div");
 
 var local_bullets = [];
 var others_bullets = [];
+var active_powerups = []
 var started = false;
 
 var paths = {
@@ -70,6 +71,10 @@ function setup() {
   socket.on('take-hit', ({amount}) => {
     player.takeHit(amount);
   });
+
+  socket.on('powerups', ({powerups}) => {
+    
+  });
 }
 
 function draw() {
@@ -96,7 +101,7 @@ function draw() {
     rect(windowWidth/2-windowWidth*0.25/2, 10, windowWidth*0.25*player.hp/100, 30)
 
     translate(windowWidth/2, windowHeight/2);
-    scale(1);
+    scale(abs(sin(frameCount*0.01)));
     
     //things below this translate moves relative to the 
     //player (if not in separate push pop). Things above stay in place on the screen.
@@ -158,9 +163,13 @@ function draw() {
 }
 
 function mouseClicked(){
-  if(started){
+  if(started && can_shoot){
     let b = player.shoot('laserBlue01.png', socket.id);
     local_bullets.push(b);
     socket.emit('bullet', {bullet_obj: b.toObj()});
+    // can_shoot = false;
+    // setTimeout(()=>{
+    //   can_shoot = true;
+    // }, 1000);
   }
 }
