@@ -11,7 +11,8 @@ var width = 1000, height = 1000;
 
 const powerup_types = [
                         "shield_silver.png",
-                        "pill_green.png"
+                        "pill_green.png",
+                        "bolt_bronze.png"
                       ]
 var players = {};
 var active_powerups = [];

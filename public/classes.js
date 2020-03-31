@@ -6,9 +6,12 @@ class Ship{
     this.imgName = imgName;
     this.hp = hp;
     this.shield = false;
-    this.shieldTime = 0
-    this._date = 0;
+    this.shieldTime;
+    this.speedTime;
+    this._date;
+    this.speedDate;
     this.shieldTimeout;
+    this.speedTimeout;
   }
   
   show(angle = null){
@@ -19,6 +22,12 @@ class Ship{
     if(this.shield){
       image(images['effects']['shield3.png'], -22.5, -20, 45, 40);
     }
+
+    if(this.speed > 5){
+      image(images['effects']['fire03.png'], -20, 10, 10, 30);
+      image(images['effects']['fire03.png'], 10, 10, 10, 30);
+    }
+    
     pop();
     if(this.shield){
       noFill();
@@ -27,6 +36,24 @@ class Ship{
       fill(255, 255, 255, 100);
       noStroke();
       rect(this.pos.x - 25, this.pos.y + 30, (1-((new Date()) - this._date)/this.shieldTime)*50, 10);
+    }
+    if(this.speed > 5){
+      if(this.shield){
+        noFill();
+        stroke(226, 88, 34);
+        rect(this.pos.x - 25, this.pos.y + 45, 50, 10);
+        fill(226, 88, 34, 100);
+        noStroke();
+        rect(this.pos.x - 25, this.pos.y + 45, (1-((new Date()) - this.speedDate)/this.speedTime)*50, 10);
+      }
+      else{
+        noFill();
+        stroke(226, 88, 34);
+        rect(this.pos.x - 25, this.pos.y + 30, 50, 10);
+        fill(226, 88, 34, 100);
+        noStroke();
+        rect(this.pos.x - 25, this.pos.y + 30, (1-((new Date()) - this.speedDate)/this.speedTime)*50, 10);
+      }
     }
   }
   
@@ -53,6 +80,18 @@ class Ship{
                           this.shield = false;
                          }, time*1000);
   }
+
+  giveSpeed(speed, time){
+    if(this.speedTimeout){
+      clearTimeout(this.speedTimeout);
+    }
+    this.speed = speed;
+    this.speedDate = new Date();
+    this.speedTime = time*1000;
+    this.speedTimeout = setTimeout(()=>{
+                          this.speed = 5;
+                        }, time*1000);
+  }
   
   shoot(imgName, owner){
     var v = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
@@ -72,7 +111,15 @@ class Ship{
               y: this.pos.y, 
               imgName: this.imgName, 
               hp: this.hp,
-              angle: this.vel.heading()+PI/2
+              angle: this.vel.heading()+PI/2,
+              speed: this.speed,
+              shield: this.shield,
+              shieldTime: this.shieldTime,
+              shieldTimeout: this.shieldTimeout,
+              _date: (this.shield)?this._date.toString():this._date,
+              speedTime: this.speedTime,
+              speedDate: (this.speed>5)?this.speedDate.toString():this.speedDate,
+              speedTimeout: this.speedTimeout
             }
   }
 }
@@ -90,7 +137,7 @@ class Bullet{
     push();
     translate(this.pos.x, this.pos.y);
     rotate(this.vel.heading() + PI/2);
-    image(images['lasers'][this.imgName], 0, 0, 10, 40);
+    image(images['lasers'][this.imgName], -5, -20, 10, 40);
     pop();
   }
 

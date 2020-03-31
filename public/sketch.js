@@ -1,4 +1,4 @@
-var socket = io();
+var socket;
 var players = {};
 var can_shoot = true;
 var player_img;
@@ -10,66 +10,6 @@ var local_bullets = [];
 var others_bullets = [];
 var active_powerups = []
 var started = false;
-var shielded_opponents = {};
-
-socket.on('playersData', (data) => {
-  for(let id of Object.keys(data)){
-    if(id !== socket.id){
-      players[id] = [new Ship(data[id].x, data[id].y, data[id].imgName, data[id].hp), data[id].angle];
-    }
-  }
-});
-
-socket.on('playerDisconnected', (data) => {
-  delete players[data.id];
-});
-
-socket.on('new-bullet', ({b}) => {
-  if (b.owner_id !== socket.id) {
-    let t = new Bullet(createVector(b.x, b.y), 
-                        createVector(b.vx, b.vy),
-                        b.imgName,
-                        b.owner_id);
-    others_bullets.push(t);
-  }
-});
-
-socket.on('take-hit', ({amount}) => {
-  player.takeHit(amount);
-});
-
-socket.on('powerups', ({powerups}) => {
-  active_powerups = powerups;
-});
-
-socket.on('powerup', ({powerup, id}) => {
-  if(id == socket.id){
-    if(powerup.type == "pill_green.png"){
-      player.hp = 100;
-    }
-    else if(powerup.type == "shield_silver.png"){
-      player.giveShield(10);
-    }
-  }
-  else{
-    if(powerup.type == "pill_green.png"){
-      
-    }
-    else if(powerup.type == "shield_silver.png"){
-      if(shielded_opponents[id]){
-        clearTimeout(shielded_opponents[id].shieldTimeout);
-      }
-      shielded_opponents[id] = {
-                                  shieldTime: 10*1000,
-                                  _date: new Date(),
-                                  shieldTimeout: setTimeout(()=>{
-                                    delete shielded_opponents[id];
-                                  }, 10*1000)
-                               }
-      console.log(shielded_opponents[id]);
-    }
-  }
-});
 
 var paths = {
   'damage': ['assets/playerShip1_damage1.png', 'assets/playerShip1_damage2.png', 'assets/playerShip1_damage3.png', 'assets/playerShip2_damage1.png', 'assets/playerShip2_damage2.png', 'assets/playerShip2_damage3.png', 'assets/playerShip3_damage1.png', 'assets/playerShip3_damage2.png', 'assets/playerShip3_damage3.png'], 
@@ -88,7 +28,8 @@ var images = {
 }
 
 function start(){
-    startDiv.style.display = "none";
+  started = true;
+  startDiv.style.display = "none";
 }
 
 function preload(){
@@ -104,7 +45,59 @@ function setup() {
   width = 1000; height = 1000;
   player = new Ship(50, 50, 'playerShip1_blue.png', 100);
   space_background = new Back(width*2, height*2, 300, [-width, -height]);
-  started = true;
+  socket = io()
+  socket.on('playersData', (data) => {
+    for(let id of Object.keys(data)){
+      if(id !== socket.id){
+        let t = new Ship(data[id].x, data[id].y, data[id].imgName, data[id].hp);
+        t.shield = data[id].shield;
+        t.shieldTime = data[id].shieldTime;
+        t._date = Date.parse(data[id]._date);
+        t.shieldTimeout = data[id].shieldTimeout;
+        t.speedTimeout = data[id].speedTimeout;
+        t.speedDate = Date.parse(data[id].speedDate);
+        t.speedTime = data[id].speedTime;
+        t.speed = data[id].speed;
+        players[id] = [t, data[id].angle];
+      }
+    }
+  });
+
+  socket.on('playerDisconnected', (data) => {
+    delete players[data.id];
+  });
+
+  socket.on('new-bullet', ({b}) => {
+    if (b.owner_id !== socket.id) {
+      let t = new Bullet(createVector(b.x, b.y), 
+                          createVector(b.vx, b.vy),
+                          b.imgName,
+                          b.owner_id);
+      others_bullets.push(t);
+    }
+  });
+
+  socket.on('take-hit', ({amount}) => {
+    player.takeHit(amount);
+  });
+
+  socket.on('powerups', ({powerups}) => {
+    active_powerups = powerups;
+  });
+
+  socket.on('powerup', ({powerup, id}) => {
+    if(id == socket.id){
+      if(powerup.type == "pill_green.png"){
+        player.hp = 100;
+      }
+      else if(powerup.type == "shield_silver.png"){
+        player.giveShield(10);
+      }
+      else if(powerup.type == "bolt_bronze.png"){
+        player.giveSpeed(10, 5);
+      }
+    }
+  });
 }
 
 function draw() {
@@ -150,12 +143,6 @@ function draw() {
     if(Object.keys(players).length > 0){
       for(let id of Object.keys(players)){
         if(id !== socket.id){
-          if(shielded_opponents[id]){
-            players[id][0].shield = true;
-            players[id][0].shieldTime = shielded_opponents[id].shieldTime;
-            players[id][0].shieldTimeout = shielded_opponents[id].shieldTimeout;
-            players[id][0]._date = shielded_opponents[id]._date;
-          }
           players[id][0].show(players[id][1]);
         }
       }
