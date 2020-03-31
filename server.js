@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-var random = require('lodash');
+const {random} = require('lodash');
 
 app.use(express.static('public'));
 
@@ -16,14 +16,17 @@ const powerup_types = [
 var players = {};
 var active_powerups = [];
 
-
-for(let i = 0; i < 10; i++){
+function newPowerup(){
     let t = {
                 x: random(-1000, 1000),
                 y: random(-1000, 1000),
                 type: powerup_types[random(powerup_types.length-1)]
-            }  
-    active_powerups.push(t);
+            }
+    return t;
+}
+
+for(let i = 0; i < 10; i++){
+    active_powerups.push(newPowerup());
 }
 
 app.get('/', function (request, result) {
@@ -37,15 +40,16 @@ function newConnection(socket){
     console.log("new user connected: " + socket.id);
     
     io.to(socket.id).emit('powerups', {powerups: active_powerups});
-
     socket.on('player', (data) => {
         players[socket.id] = data;
         io.sockets.emit('playersData', players);
         for(let [ind, p] of active_powerups.entries()){
             if(Math.hypot(data.x-p.x, data.y-p.y) < 30){
-                io.to(socket.id).emit('powerup', p);
+                io.sockets.emit('powerup', {powerup: p, id: socket.id});
                 delete p;
-                active_powerups.splice(i, 1);
+                active_powerups.splice(ind, 1);
+                active_powerups.push(newPowerup());
+                io.sockets.emit('powerups', {powerups: active_powerups});
             }
         }
     });

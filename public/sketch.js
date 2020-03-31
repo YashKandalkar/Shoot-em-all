@@ -10,6 +10,66 @@ var local_bullets = [];
 var others_bullets = [];
 var active_powerups = []
 var started = false;
+var shielded_opponents = {};
+
+socket.on('playersData', (data) => {
+  for(let id of Object.keys(data)){
+    if(id !== socket.id){
+      players[id] = [new Ship(data[id].x, data[id].y, data[id].imgName, data[id].hp), data[id].angle];
+    }
+  }
+});
+
+socket.on('playerDisconnected', (data) => {
+  delete players[data.id];
+});
+
+socket.on('new-bullet', ({b}) => {
+  if (b.owner_id !== socket.id) {
+    let t = new Bullet(createVector(b.x, b.y), 
+                        createVector(b.vx, b.vy),
+                        b.imgName,
+                        b.owner_id);
+    others_bullets.push(t);
+  }
+});
+
+socket.on('take-hit', ({amount}) => {
+  player.takeHit(amount);
+});
+
+socket.on('powerups', ({powerups}) => {
+  active_powerups = powerups;
+});
+
+socket.on('powerup', ({powerup, id}) => {
+  if(id == socket.id){
+    if(powerup.type == "pill_green.png"){
+      player.hp = 100;
+    }
+    else if(powerup.type == "shield_silver.png"){
+      player.giveShield(10);
+    }
+  }
+  else{
+    if(powerup.type == "pill_green.png"){
+      
+    }
+    else if(powerup.type == "shield_silver.png"){
+      if(shielded_opponents[id]){
+        clearTimeout(shielded_opponents[id].shieldTimeout);
+      }
+      shielded_opponents[id] = {
+                                  shieldTime: 10*1000,
+                                  _date: new Date(),
+                                  shieldTimeout: setTimeout(()=>{
+                                    delete shielded_opponents[id];
+                                  }, 10*1000)
+                               }
+      console.log(shielded_opponents[id]);
+    }
+  }
+});
 
 var paths = {
   'damage': ['assets/playerShip1_damage1.png', 'assets/playerShip1_damage2.png', 'assets/playerShip1_damage3.png', 'assets/playerShip2_damage1.png', 'assets/playerShip2_damage2.png', 'assets/playerShip2_damage3.png', 'assets/playerShip3_damage1.png', 'assets/playerShip3_damage2.png', 'assets/playerShip3_damage3.png'], 
@@ -28,7 +88,6 @@ var images = {
 }
 
 function start(){
-    started = true;
     startDiv.style.display = "none";
 }
 
@@ -45,41 +104,13 @@ function setup() {
   width = 1000; height = 1000;
   player = new Ship(50, 50, 'playerShip1_blue.png', 100);
   space_background = new Back(width*2, height*2, 300, [-width, -height]);
-  
-  socket.on('playersData', (data) => {
-    for(let id of Object.keys(data)){
-      if(id !== socket.id){
-        players[id] = [new Ship(data[id].x, data[id].y, data[id].imgName, data[id].hp), data[id].angle];
-      }
-    }
-  });
-
-  socket.on('playerDisconnected', (data) => {
-    delete players[data.id];
-  });
-
-  socket.on('new-bullet', ({b}) => {
-    if (b.owner_id !== socket.id) {
-      let t = new Bullet(createVector(b.x, b.y), 
-                          createVector(b.vx, b.vy),
-                          b.imgName,
-                          b.owner_id);
-      others_bullets.push(t);
-    }
-  });
-
-  socket.on('take-hit', ({amount}) => {
-    player.takeHit(amount);
-  });
-
-  socket.on('powerups', ({powerups}) => {
-    
-  });
+  started = true;
 }
 
 function draw() {
   if(started){
     if(player.hp <= 0){
+      socket.close();
       alert("You died. RIP.");
       setTimeout(()=>{
         location.reload();
@@ -89,6 +120,7 @@ function draw() {
     }
     background(0);
     
+    noFill();
     rect(0, 0, 100, 50);
     text(int(player.pos.x), 10, 15);
     text(int(player.pos.y), 10, 30);
@@ -101,7 +133,7 @@ function draw() {
     rect(windowWidth/2-windowWidth*0.25/2, 10, windowWidth*0.25*player.hp/100, 30)
 
     translate(windowWidth/2, windowHeight/2);
-    scale(abs(sin(frameCount*0.01)));
+    scale(1);
     
     //things below this translate moves relative to the 
     //player (if not in separate push pop). Things above stay in place on the screen.
@@ -118,6 +150,12 @@ function draw() {
     if(Object.keys(players).length > 0){
       for(let id of Object.keys(players)){
         if(id !== socket.id){
+          if(shielded_opponents[id]){
+            players[id][0].shield = true;
+            players[id][0].shieldTime = shielded_opponents[id].shieldTime;
+            players[id][0].shieldTimeout = shielded_opponents[id].shieldTimeout;
+            players[id][0]._date = shielded_opponents[id]._date;
+          }
           players[id][0].show(players[id][1]);
         }
       }
@@ -158,6 +196,11 @@ function draw() {
       local_bullets[i].show();
     }
 
+    fill(255);
+    stroke(255);
+    for(let powerup of active_powerups){
+      image(images['powerUps'][powerup.type], powerup.x-15, powerup.y-15, 30, 30);
+    }
     socket.emit('player', player.toObj());
   }
 }
@@ -167,9 +210,9 @@ function mouseClicked(){
     let b = player.shoot('laserBlue01.png', socket.id);
     local_bullets.push(b);
     socket.emit('bullet', {bullet_obj: b.toObj()});
-    // can_shoot = false;
-    // setTimeout(()=>{
-    //   can_shoot = true;
-    // }, 1000);
+    can_shoot = false;
+    setTimeout(()=>{
+      can_shoot = true;
+    }, 500);
   }
 }

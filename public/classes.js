@@ -2,23 +2,39 @@ class Ship{
   constructor(x, y, imgName, hp){
     this.pos = createVector(x, y);
     this.vel = createVector(0, 0);
+    this.speed = 5;
     this.imgName = imgName;
     this.hp = hp;
+    this.shield = false;
+    this.shieldTime = 0
+    this._date = 0;
+    this.shieldTimeout;
   }
   
   show(angle = null){
     push();
     translate(this.pos.x, this.pos.y);
     rotate(angle || this.vel.heading()+PI/2);
-    image(images['playerShip'][this.imgName], -14, -14, 35, 30);
+    image(images['playerShip'][this.imgName], -17.5, -15, 35, 30);
+    if(this.shield){
+      image(images['effects']['shield3.png'], -22.5, -20, 45, 40);
+    }
     pop();
+    if(this.shield){
+      noFill();
+      stroke(255);
+      rect(this.pos.x - 25, this.pos.y + 30, 50, 10);
+      fill(255, 255, 255, 100);
+      noStroke();
+      rect(this.pos.x - 25, this.pos.y + 30, (1-((new Date()) - this._date)/this.shieldTime)*50, 10);
+    }
   }
   
   update(){
     this.vel = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
     var d = dist(mouseX, mouseY, width/2, height/2);
     this.vel.mult(d*0.0005);    
-    this.vel.limit(5);
+    this.vel.limit(this.speed);
 
     this.pos.x = constrain(this.pos.x, -width, width);
     this.pos.y = constrain(this.pos.y, -height, height);
@@ -26,6 +42,18 @@ class Ship{
     this.pos.add(this.vel);
   }
 
+  giveShield(time){
+    if(this.shieldTimeout){
+      clearTimeout(this.shieldTimeout);
+    }
+    this.shield = true;
+    this._date = new Date();
+    this.shieldTime = time*1000;
+    this.shieldTimeout = setTimeout(()=>{
+                          this.shield = false;
+                         }, time*1000);
+  }
+  
   shoot(imgName, owner){
     var v = createVector(mouseX - windowWidth/2, mouseY - windowHeight/2);
     v.setMag(17);
@@ -34,7 +62,8 @@ class Ship{
   }
 
   takeHit(amount){
-    this.hp -= amount;
+    if(!this.shield)
+      this.hp -= amount;
   }
 
   toObj(){
