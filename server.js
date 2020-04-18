@@ -6,7 +6,7 @@ const {random} = require('lodash');
 
 app.use(express.static('public'));
 
-var port = process.env.PORT || 3000
+var port = process.env.PORT || 3000;
 var width = 1000, height = 1000;
 
 const powerup_types = [
@@ -35,7 +35,6 @@ app.get('/', function (request, result) {
 });
 
 io.on('connection', newConnection);
-
 
 function newConnection(socket){
     console.log("new user connected: " + socket.id);

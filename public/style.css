@@ -3,7 +3,10 @@ html, body {
   padding: 0;
 }
 canvas {
-  display: block;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    /*z-index: -1;*/
 }
 
 #start-div{
