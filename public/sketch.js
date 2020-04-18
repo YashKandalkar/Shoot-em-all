@@ -31,6 +31,8 @@ function start(){
   startDiv.style.display = "none";
   fullscreen();
   startButton.style("display", 'none');
+  let t = document.getElementsByTagName('canvas');
+  t[0].requestFullscreen();
 }
 
 function preload(){
@@ -42,7 +44,7 @@ function preload(){
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  let cnv = createCanvas(windowWidth, windowHeight);
   width = 1000; height = 1000;
   player = new Ship(50, 50, 'playerShip1_blue.png', 100);
   space_background = new Back(width*2, height*2, 300, [-width, -height]);
