@@ -44,7 +44,11 @@ function preload(){
 }
 
 function setup() {
-  let cnv = createCanvas(windowWidth, windowHeight);
+  let cnv = createCanvas(displayWidth, displayHeight);
+  let container = document.getElementById('container')
+  cnv.parent(container);
+  container.style.display = "block";
+
   width = 1000; height = 1000;
   player = new Ship(50, 50, 'playerShip1_blue.png', 100);
   space_background = new Back(width*2, height*2, 300, [-width, -height]);
